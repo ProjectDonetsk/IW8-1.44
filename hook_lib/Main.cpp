@@ -1,8 +1,6 @@
 #include "Main.hpp"
 #include <fstream>
-#include "fastfile.h"
 #include "game_inc.h"
-#include "Decryption.h"
 
 //printf colors stolen from github
 #define RESET   "\033[0m"
@@ -18,97 +16,6 @@
 #define WHITEBOLD "\033[1;37m"
 #define YELLUL "\033[4;33m"
 #define UNDERLINERED "\033[4;31m"
-
-void print_cbuf_func()
-{
-	printf("Enter command: ");
-	std::string input;
-	std::getline(std::cin, input);
-	const char* cmd = input.c_str();
-	Dvar_RegisterBool_Detour(cmd, true, 0, "sigma sigma boy");
-}
-
-void printAsciiArt() {
-	const std::string art[] = {
-		"\n",
-		"&&&&@@@@@@@@&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&@%%&@@@@",
-		"@@@@@@@@@@@@@@@&&&&@@@@@@@@@@@@&&&&@@@@&&&&&&&&%%&&&@@@@@@@@@&&@@@@@@&",
-		"@@@@@@@@@@@@@@@(,,*/%@@@@@@@&/,.,*(%@@%,,,,,,,,,,,,,*#@@@@@@@@@@@@@&&%",
-		"@@@@@@@@@@@@@@&%(/*,*/(%&@@&(*****/(&@@@%(/#%&&&&&%/,*(&@@@@@@@@@@@@&&",
-		"@@@@@@@@@@@@@%/**##(/,*/#/,*/%%#**(&@@%*,*#@@@@@@@(,*(@@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@%/**#&@%(*,**/#&@&#**(&@@%,,**/********(%@@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@%/**#&@@@&#*#@@@@&#**(&@@%,,*#&&&%/,*(&@@@@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@%/**#&@@@@@@@@@@@&#**(&@@%,,/%@@@@%(**(&@@@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@%/**#&@@@@@@@@@@@&#**#&@@%,,/%@@@@@&***(%@@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@&###&@@@@@@@@@@@@&%##%@@@&((%&@@@@@@&#(#%@@@@@@@@@@@@@@@@",
-		"&&&&&&&&&&&&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@@@@@@&%((((((((#%@@@@@&%((#%&@@@@@@@@&%(#%@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@@@#/,*/(((((//**(%@@@@%/*,*(%@@@@@@@%/,/#@@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@@@(,*(@@@@@@@&*,*%@@&#*.,***/#&@@@@&%/,/#@@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@@@(,*(@@@@@@@&*,/%@@&#/*(#%(**/#&@@@%/,/%@@@@@@@@@@@@@@@@",
-		"@@@@@@@@@@@@@@@(,*(@@@@@@@&*,*%@@&#/*(%@@&(**/(&&%(,/#@@@@@@@@@@@@@@&@",
-		"@@@@@@@@@@@@@@@(,*(@@@@@@@%*,/%@@&#/*(%@@@@%/**/(/*,/#@@@@@@@@@@@&&&&&",
-		"&@@@@@@@@@@@@@@(,*(&@@@@@@&*,/%@@&#/*(%@@@@@@%/*,***(%@@@@@@@@@@@@@@@@",
-		"&&@@@@@@@@@@@@@%//*/*******/(%&@@&#/*(&@@@@@@@@%(**/(%@@@@@@@@@@@@@@@&",
-		"&&@@@@@@@@@@@@@@@&&&@@@@@@@@@@@@@@&&&&@@@@@@@@@@@&&&&@@@@@@@@@@@@@@&&&",
-		"@@@&@@@@@@@@@@@@&&&@&&&&&&&&&&@@@@&&%&@@@@@@@@@&&&&&&&@@@@@@@@@&&&&&&%",
-		"@@&&@@@@@@@@@@@&#%%&@@&&@@&%%&@@@@&%#&@@@@@@@&&&%%%%%&@@@@&&@@&&&&&&&&",
-		"@@@@@@@@@@@@@@@%(#%@@@@@@@&##%&@@@%%#%&@@@@&&&%%%%##%&@@@@@@@@@@@@&&&&",
-		"\n"
-	};
-
-	for (const std::string& line : art) {
-		std::cout << line << std::endl;
-	}
-}
-
-int DB_LoadXFile_Detour(const char* zoneName, uintptr_t zoneMem, uintptr_t assetList, int zoneFlags, bool wasPaused, int failureMode, uintptr_t outSignature)
-{
-	return db_loadxfile.stub<int>(zoneName, zoneMem, assetList, zoneFlags, wasPaused, failureMode, outSignature);
-}
-
-int DB_PollFastfileState_Detour(const char* zoneName)
-{
-	if (strcmp(zoneName, "mp_don4_cg_ls_tr") == 0)
-	{
-		return 2;
-	}																			//patches collision on v84
-
-	return db_pollfastfilestate.stub<int>(zoneName);
-}
-
-bool DB_CheckXFileVersion_Detour()
-{
-	return true;
-}
-
-#include "MemoryManager.h"
-
-/*void Cbuf_AddText(const char* text) {
-	uintptr_t s_cmd_textArray = Decryption::GetCmdTextArray();
-
-	if (!s_cmd_textArray) return;
-
-	int textLength = strlen(text);
-	int cmdSize = m.ReadMemory<int>(s_cmd_textArray + 0x10004);
-
-	if (textLength + cmdSize > m.ReadMemory<DWORD>(s_cmd_textArray + 0x10000)) {
-		// CmdText::maxsize condition
-		return;
-	}
-
-	auto writeStringToMemory = [](uintptr_t address, const char* str) -> void {
-		for (int i = 0; str[i]; ++i) {
-			m.WriteMemory<char>(address + i, str[i]);
-		}
-	};
-
-	writeStringToMemory(s_cmd_textArray + cmdSize, text);
-	m.WriteMemory<DWORD>(s_cmd_textArray + 0x10004, m.ReadMemory<DWORD>(s_cmd_textArray + 0x10004) + textLength);
-}*/
-
 
 //utils::hook::detour dvar_registerbool;
 dvar_t* Dvar_RegisterBool_Detour(const char* dvarName, bool value, unsigned int flags, const char* description)
@@ -380,16 +287,13 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD Reason, LPVOID lpVoid)
 		HANDLE hCmd = createConsole();
 		if (hCmd == NULL)
 		{
-			MessageBoxA(NULL, "Couldn't create console.", "IW8 1.44.0 - MRON", MB_ICONERROR | MB_OK | MB_DEFBUTTON1);
+			MessageBoxA(NULL, "Couldn't create console.", "IW8 1.44.0", MB_ICONERROR | MB_OK | MB_DEFBUTTON1);
 		}
 		printf(GREEN "[+]" RESET WHITEBOLD " Hello, world!\n" RESET);
 		printf(GREEN "[+]" RESET WHITEBOLD " Base EXE Address: " RESET YELLUL"0x%p\n" , g_Addrs.ModuleBase);
 		printf(RESET GREEN "[+]" RESET WHITEBOLD " You are playing as:" RESET MAGENTA " %s\n", username_Detour() );
 		printf(RESET GREEN "[+]" RESET BLUE " Initializing...\n" RESET);
 		printf(CYAN);
-		//intf(reinterpret_cast<const char*>(0x16368B02692_b) ); //should say https in console ModernWarfare.exe+9BE46A4  ,,, ModernWarfare.exe+9BE46D4 //0x708E8C8_b
-		//printAsciiArt();
-		//print_cbuf_func();
 	}
 
 	return TRUE;
